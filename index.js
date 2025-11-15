@@ -21,6 +21,36 @@ async function run() {
 
     const db = client.db('cleanbdD')
     const infoCollection = db.collection('info')
+    const issueCollection = db.collection('bids')
+    const usersCollection = db.collection('users');
+
+    app.post('/users', async(req, res)=>{
+      const newUser = req.body
+
+      const email = req.body.email;
+      const query = {email: email}
+      const existingUser = await usersCollection.findOne(query);
+      if(existingUser){
+        res.send('user alredy exist.')
+      }
+      else{
+        const result = await usersCollection.insertOne(newUser);
+        res.send(result);
+      }
+      const result = await usersCollection.insertOne(newUser);
+      res.send(result)
+    })
+
+    app.get('/bids', async (req, res)=>{
+        const email = req.query.email;
+        const query = {};
+        if(email){
+            query.email = email;
+        }
+        const cursor = issueCollection.find()
+        const result = await cursor.toArray()
+        res.send(result)
+    })
 
     app.get('/info', async (req, res)=>{
 
@@ -30,6 +60,12 @@ async function run() {
         
     })
     
+    app.get('/latest-issues', async (req, res)=>{
+      const cursor = infoCollection.find().sort({ammount: -1}).limit(6);
+      const result = await cursor.toArray();
+      res.send(result);
+    })
+
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
