@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 
 // index.js ফাইলে uri লাইনটি এভাবে পরিবর্তন করুন
-const uri = `mongodb://mdomarfaruqe74_db_user:${process.env.DB_PASSWORD}@cluster0-shard-00-00.nmzdq7c.mongodb.net:27017,cluster0-shard-00-01.nmzdq7c.mongodb.net:27017,cluster0-shard-00-02.nmzdq7c.mongodb.net:27017/?ssl=true&replicaSet=atlas-xxxxx-shard-0&authSource=admin&retryWrites=true&w=majority`;
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.nmzdq7c.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
