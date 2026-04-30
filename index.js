@@ -1,110 +1,98 @@
-const express = require('express');
-const cors = require('cors');
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const express = require("express");
+const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
-const port = process.env.PORT||5000;
-require('dotenv').config();
+const port = process.env.PORT || 5000;
+require("dotenv").config();
 
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json());
 
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.nmzdq7c.mongodb.net/?appName=Cluster0`;
+// index.js ফাইলে uri লাইনটি এভাবে পরিবর্তন করুন
+const uri = `mongodb://mdomarfaruqe74_db_user:${process.env.DB_PASSWORD}@cluster0-shard-00-00.nmzdq7c.mongodb.net:27017,cluster0-shard-00-01.nmzdq7c.mongodb.net:27017,cluster0-shard-00-02.nmzdq7c.mongodb.net:27017/?ssl=true&replicaSet=atlas-xxxxx-shard-0&authSource=admin&retryWrites=true&w=majority`;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 async function run() {
   try {
     await client.connect();
 
-    const db = client.db('cleanbdD')
-    const infoCollection = db.collection('info')
-    const issueCollection = db.collection('bids')
-    const usersCollection = db.collection('users');
+    const db = client.db("cleanbdD");
+    const infoCollection = db.collection("info");
+    const issueCollection = db.collection("bids");
+    const usersCollection = db.collection("users");
 
-    app.post('/users', async(req, res)=>{
-      const newUser = req.body
-
+    app.post("/users", async (req, res) => {
+      const newUser = req.body;
       const email = req.body.email;
-      const query = {email: email}
+      const query = { email: email };
       const existingUser = await usersCollection.findOne(query);
-      if(existingUser){
-        res.send('user alredy exist.')
+
+      if (existingUser) {
+        return res.send({ message: "user already exists", insertedId: null });
       }
-      
-        const result = await usersCollection.insertOne(newUser);
-        res.send(result);
-      
-      
-    })
 
-    app.get('/bids', async (req, res)=>{
-        const email = req.query.email;
-        const query = {};
-        if(email){
-            query.email = email;
-        }
-        const cursor = issueCollection.find()
-        const result = await cursor.toArray()
-        res.send(result)
-    })
+      const result = await usersCollection.insertOne(newUser);
+      res.send(result);
+    });
 
-    app.get('/my-issues', async (req, res) =>{
+    app.get("/my-issues", async (req, res) => {
       const email = req.query.email;
-      if(!email){
-        return res.status(400).send({message: "Email is required"})
+      if (!email) {
+        return res.status(400).send({ message: "Email is required" });
       }
-      const query = {email: email};
+      const query = { email: email };
       const result = await infoCollection.find(query).toArray();
       res.send(result);
-    })
+    });
 
-    app.delete('/my-issues/:id', async (req, res) =>{
+    app.delete("/my-issues/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
-      const result = await  infoCollection.deleteOne(query);
-      res.send(result)
-    })
+      const query = { _id: new ObjectId(id) };
+      const result = await infoCollection.deleteOne(query);
+      res.send(result);
+    });
 
-    app.get('/info', async (req, res)=>{
+    // app.get("/info", async (req, res) => {
+    //   const result = await infoCollection.find().toArray();
 
-        const result = await infoCollection.find().toArray() 
+    //   res.send(result);
+    // });
 
-        res.send(result)
-        
-    })
-    
-    app.get('/latest-issues', async (req, res)=>{
-      const cursor = infoCollection.find().sort({ammount: -1}).limit(6);
+    app.get("/latest-issues", async (req, res) => {
+      const cursor = infoCollection.find().sort({ ammount: -1 }).limit(6);
       const result = await cursor.toArray();
       res.send(result);
-    })
+    });
 
-    app.get('/info/:id', async (req, res) =>{
+    app.get("/info/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)}
+      const query = { _id: new ObjectId(id) };
       const result = await infoCollection.findOne(query);
       res.send(result);
-    })
+    });
 
-    app.get('/info', async (req, res) =>{
+    app.get("/info", async (req, res) => {
       const cursor = infoCollection.find();
       const result = await cursor.toArray();
       res.send(result);
     });
 
-    app.post('/info', async (req, res) =>{
+    app.post("/info", async (req, res) => {
       const newIssue = req.body;
       const result = await infoCollection.insertOne(newIssue);
       res.send(result);
-    })
+    });
 
     await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!",
+    );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -112,12 +100,10 @@ async function run() {
 }
 run().catch(console.dir);
 
+app.get("/", (req, res) => {
+  res.send("Cleaning BD Server is Running");
+});
 
-
-app.get('/', (req, res)=>{
-    res.send('Cleaning BD Server is Running')
-})
-
-app.listen(port, ()=>{
-    console.log(`Cleaning BD Server is Running on Port ${port}`);
-})
+app.listen(port, () => {
+  console.log(`Cleaning BD Server is Running on Port ${port}`);
+});
